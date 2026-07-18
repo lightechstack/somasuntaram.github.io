@@ -1,0 +1,29 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const caseStudies = [
+  { slug: 'heroku-vercel-to-eks', title: 'Heroku/Vercel → EKS migration', status: 'blocked' },
+  { slug: 'devsecops-pipeline', title: 'DevSecOps pipeline design', status: 'blocked' },
+  { slug: 'compliance-as-infrastructure', title: 'Compliance as infrastructure', status: 'blocked' },
+  { slug: 'production-incident', title: 'Production incident writeup', status: 'blocked' },
+  { slug: 'portfolio-infra', title: 'This site\u2019s own infrastructure', status: 'ready' },
+];
+---
+<BaseLayout title="Somasuntaram — Platform / DevSecOps Engineer">
+  <h1>Somasuntaram</h1>
+  <p>
+    Lead DevSecOps Engineer. AWS infrastructure, Kubernetes/EKS operations,
+    CI/CD, and compliance-adjacent platform work — described here at the
+    level of detail I can actually defend, not the level that sounds best.
+  </p>
+
+  <h2>Case studies</h2>
+  {caseStudies.map((cs) => (
+    <div class="case-study-card">
+      <h3><a href={`/work/${cs.slug}`}>{cs.title}</a></h3>
+      {cs.status === 'blocked' && (
+        <p class="blocked">status: blocked — content pending resume fact-check</p>
+      )}
+    </div>
+  ))}
+</BaseLayout>

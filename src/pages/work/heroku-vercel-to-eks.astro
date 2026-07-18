@@ -1,0 +1,15 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+<BaseLayout title="Heroku/Vercel → EKS migration — Somasuntaram">
+  <h1>Heroku/Vercel → EKS migration</h1>
+  <div class="blocked">
+    BLOCKED — needs before writing:
+    <ul>
+      <li>Actual completion state of the migration: fully cut over, partially cut over (which services still on Heroku/Vercel), or in progress. Resume currently uses present-continuous tense with no stated percentage — that's what gets you caught in an interview.</li>
+      <li>The 110 TPS claim needs a system context: which service, under what load profile, measured how (load test tool, APM, or back-of-envelope from request logs). An unanchored throughput number is worse than no number.</li>
+      <li>Before/after: what Heroku/Vercel actually cost you (cold starts, addon sprawl, deploy model) that EKS fixed. Without this the migration reads as resume-driven-development instead of a forced technical decision.</li>
+    </ul>
+  </div>
+  <p><em>Draft will go here once the above is resolved. Not filling this with placeholder prose.</em></p>
+</BaseLayout>

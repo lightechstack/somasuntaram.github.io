@@ -1,0 +1,15 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+<BaseLayout title="Compliance as infrastructure — Somasuntaram">
+  <h1>Compliance as infrastructure</h1>
+  <div class="blocked">
+    BLOCKED — needs before writing:
+    <ul>
+      <li>PCI DSS 4.0, SOC 2, and ISO 27001 are currently grouped as one claim. They need to be split: which specific controls did you personally implement (e.g. encryption-at-rest config, access logging, network segmentation, key rotation) vs. which were audited/attested by someone else with you as a supporting contributor.</li>
+      <li>Evidence artifacts you personally produced — Terraform modules, IAM policies, logging pipelines, runbooks — that an auditor or interviewer could point to as proof of ownership.</li>
+      <li>This case study is the highest cross-examination risk on the whole site. Don't write it until the control-level breakdown exists; a vague version here is worse than not having the page.</li>
+    </ul>
+  </div>
+  <p><em>Draft will go here once the above is resolved.</em></p>
+</BaseLayout>

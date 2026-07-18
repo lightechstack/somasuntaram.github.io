@@ -1,0 +1,39 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = 'DevSecOps / Platform engineering portfolio.' } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{title}</title>
+  <meta name="description" content={description} />
+</head>
+<body>
+  <div class="status-line">
+    <span class="status-dot" aria-hidden="true"></span>
+    <span>Somasuntaram — Platform / DevSecOps</span>
+    <span>·</span>
+    <a href="/">index</a>
+    <span>·</span>
+    <a href="/work">work</a>
+    <span>·</span>
+    <a href="/resume.pdf">resume.pdf</a>
+  </div>
+  <main>
+    <slot />
+  </main>
+  <footer style="margin: 4rem 0 2rem; font-family: var(--mono); font-size: 0.8rem; color: var(--ink-muted);">
+    Built on AWS (S3 + CloudFront + Route53 + ACM), provisioned with Terraform, deployed via GitHub Actions —
+    <a href="/work/portfolio-infra">details</a>.
+  </footer>
+</body>
+</html>

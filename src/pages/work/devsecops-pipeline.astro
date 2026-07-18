@@ -1,0 +1,15 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+<BaseLayout title="DevSecOps pipeline design — Somasuntaram">
+  <h1>DevSecOps pipeline design</h1>
+  <div class="blocked">
+    BLOCKED — needs before writing:
+    <ul>
+      <li>Drop "GitOps" from the framing. You're running CodeBuild-based CI/CD, not a reconciliation-loop operator (ArgoCD/Flux). Calling push-based CodeBuild deploys "GitOps" is the single fastest way to lose credibility with an interviewer who knows the term — they will ask "what's your reconciliation loop / drift detection" and there isn't one.</li>
+      <li>Actual pipeline stages: what runs in CodeBuild (SAST, dependency scan, image scan, IaC scan — which tools, at which stage, blocking vs. advisory).</li>
+      <li>What "security" actually means in this pipeline — secrets scanning, container scanning, or policy-as-code — pick the ones you actually configured, not the category.</li>
+    </ul>
+  </div>
+  <p><em>Draft will go here once the above is resolved.</em></p>
+</BaseLayout>
