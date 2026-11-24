@@ -6,3 +6,5 @@ dist/
 *.tfstate.backup
 .terraform/
 .terraform.lock.hcl
+terraform.tfvars
+src/drafts/

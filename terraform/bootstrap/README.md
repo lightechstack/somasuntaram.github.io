@@ -17,18 +17,39 @@ aws s3api put-bucket-versioning \
   --bucket <your-tf-state-bucket> \
   --versioning-configuration Status=Enabled
 
-aws dynamodb create-table \
-  --table-name <your-tf-lock-table> \
-  --attribute-definitions AttributeName=LockID,AttributeType=S \
-  --key-schema AttributeName=LockID,KeyType=HASH \
-  --billing-mode PAY_PER_REQUEST
+aws s3api put-bucket-encryption \
+  --bucket <your-tf-state-bucket> \
+  --server-side-encryption-configuration '{"Rules":[{"ApplyServerSideEncryptionByDefault":{"SSEAlgorithm":"AES256"}}]}'
+
+aws s3api put-public-access-block \
+  --bucket <your-tf-state-bucket> \
+  --public-access-block-configuration BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true
+
+aws s3api put-bucket-ownership-controls \
+  --bucket <your-tf-state-bucket> \
+  --ownership-controls '{"Rules":[{"ObjectOwnership":"BucketOwnerEnforced"}]}'
+
+# Reject plain-HTTP access to state (may contain resource ARNs/config —
+# not secrets by design, but still shouldn't cross the wire unencrypted).
+aws s3api put-bucket-policy \
+  --bucket <your-tf-state-bucket> \
+  --policy '{"Version":"2012-10-17","Statement":[{"Sid":"DenyInsecureTransport","Effect":"Deny","Principal":"*","Action":"s3:*","Resource":["arn:aws:s3:::<your-tf-state-bucket>","arn:aws:s3:::<your-tf-state-bucket>/*"],"Condition":{"Bool":{"aws:SecureTransport":"false"}}}]}'
 ```
+
+This mirrors the same baseline (encryption, no public access, no ACLs,
+TLS-only) the `site` bucket gets from Terraform in `s3.tf` — state storage
+doesn't get a lower bar just because it's created out-of-band.
+
+No DynamoDB lock table needed — Terraform >= 1.10 supports native S3
+locking (`use_lockfile = true` in the `backend "s3"` block) via conditional
+writes against the state bucket itself, replacing the old DynamoDB-table
+pattern. One less resource to create, pay for, or forget to tear down.
 
 Then fill in the `backend "s3"` block in `versions.tf` and run
 `terraform init`.
 
 **Option B — a separate `bootstrap/` Terraform root with `local` backend**
-that provisions the state bucket + lock table, then you `terraform state mv`
+that provisions the state bucket, then you `terraform state mv`
 nothing (there's nothing to move) and just point the main stack at it. More
 "correct" for a team, overkill for one portfolio site — worth stating that
 tradeoff explicitly if this comes up in an interview, since "always use

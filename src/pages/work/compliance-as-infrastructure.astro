@@ -1,15 +1,113 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import Panel from '../../components/Panel.astro';
 ---
 <BaseLayout title="Compliance as infrastructure — Somasuntaram">
-  <h1>Compliance as infrastructure</h1>
-  <div class="blocked">
-    BLOCKED — needs before writing:
-    <ul>
-      <li>PCI DSS 4.0, SOC 2, and ISO 27001 are currently grouped as one claim. They need to be split: which specific controls did you personally implement (e.g. encryption-at-rest config, access logging, network segmentation, key rotation) vs. which were audited/attested by someone else with you as a supporting contributor.</li>
-      <li>Evidence artifacts you personally produced — Terraform modules, IAM policies, logging pipelines, runbooks — that an auditor or interviewer could point to as proof of ownership.</li>
-      <li>This case study is the highest cross-examination risk on the whole site. Don't write it until the control-level breakdown exists; a vague version here is worse than not having the page.</li>
-    </ul>
-  </div>
-  <p><em>Draft will go here once the above is resolved.</em></p>
+  <Panel title="Overview">
+    <h1>Compliance as infrastructure</h1>
+    <p>
+      "Compliance" covers two genuinely different things, and conflating them
+      is how this kind of claim falls apart under questioning. One is
+      technical controls that exist as code — I either wrote the Terraform/IAM
+      that implements them or I didn't. The other is a formal certification
+      audit — a much bigger scope than infrastructure alone, where my
+      contribution was real but partial. This page keeps those separate on
+      purpose instead of blending them into one undifferentiated "I did
+      compliance" claim.
+    </p>
+  </Panel>
+
+  <Panel title="Controls I implemented directly">
+    <p>
+      Four specific controls on a Kubernetes platform, each something I wrote
+      or configured myself — not a framework name, just what the code
+      actually does:
+    </p>
+    <div class="callout-good">
+      <ul>
+        <li>
+          <strong>Resource-scoped IAM, not wildcards.</strong> The Secrets
+          Manager access policy is scoped to a single secret's ARN rather than
+          a wildcard resource, and cluster add-ons (like the load balancer
+          controller) run under IRSA — a per-service-account IAM role — rather
+          than a shared node-wide role with broader permissions than any one
+          workload needs.
+        </li>
+        <li>
+          <strong>Secrets out of <code>.env</code> files.</strong> Application
+          configuration moved from per-host <code>.env</code> files to AWS
+          Secrets Manager, pulled into pods via the Secrets Store CSI driver —
+          so a secret lives in one managed place with its own access policy,
+          not copied across every host that happens to run the service.
+        </li>
+        <li>
+          <strong>Control-plane audit logging, actually retained.</strong>
+          EKS control-plane logging enabled for audit, authenticator, and
+          controller-manager log types, with a 90-day retention policy set
+          explicitly rather than left at CloudWatch's indefinite default —
+          a deliberate retention decision, not an accident of not configuring
+          it.
+        </li>
+        <li>
+          <strong>Transport encryption on the logging cluster itself.</strong>
+          The Elasticsearch cluster backing centralized logs runs with a
+          custom CA and per-node TLS certificates for both HTTP and
+          inter-node transport — the logging pipeline doesn't get a pass on
+          encryption just because it's internal infrastructure rather than a
+          customer-facing service.
+        </li>
+      </ul>
+    </div>
+    <p>
+      None of this is framed as "ISO 27001" or "PCI DSS" — no certification
+      audit ever reviewed this specific environment, so I'm not claiming one
+      did. These are controls an auditor or a skeptical interviewer could
+      point at in the code and ask "does this actually do what you say," and
+      the answer holds up.
+    </p>
+  </Panel>
+
+  <Panel title="Formal certification: SOC 2 Type II">
+    <p>
+      Separately: a SOC 2 Type II audit came back with
+      <strong>no exceptions noted</strong> — including a control citing
+      CIS-benchmark-based system hardening as evidence. That's a real,
+      external, adversarial review outcome, not a self-assessment.
+    </p>
+    <p>
+      My part in it was narrower than "I did SOC 2": access-management
+      coordination and keeping evidence current, plus responding to security
+      questionnaires that referenced the audit once it existed. I didn't own
+      the audit engagement, and I'm not claiming the technical controls in
+      the section above were literally the evidence cited in this specific
+      audit — they're from separate work. What I can defend is the
+      coordination work and the outcome itself, stated as what it was.
+    </p>
+  </Panel>
+
+  <Panel title="Where the two connect">
+    <p>
+      The reason both belong on the same page: they're the same underlying
+      idea applied at different scopes. A certification is only as credible
+      as the technical controls underneath it — access scoped by IAM policy
+      instead of by convention, secrets in a managed store instead of a
+      config file, logs that are both captured <em>and</em> retained on
+      purpose, encryption that isn't skipped because a system is "just
+      internal." The controls section is what that looks like in Terraform
+      and Kubernetes manifests. The audit section is what it looks like when
+      an outside party checks whether all of it actually holds, end to end —
+      not just the pieces one person can point to.
+    </p>
+  </Panel>
+
+  <Panel title="Next steps">
+    <p>
+      The natural next step is enforcing encryption at rest in code
+      everywhere, as a policy check rather than a convention, so it's a
+      guarantee and not just a direction. And "coordination" on the SOC 2
+      side is deliberately general. I'd rather keep it
+      that way than imply ownership of an audit scope — user access reviews,
+      vendor risk, policy documentation — that other people carried most of.
+    </p>
+  </Panel>
 </BaseLayout>

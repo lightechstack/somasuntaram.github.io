@@ -9,5 +9,8 @@
   },
   "dependencies": {
     "astro": "^4.15.0"
+  },
+  "devDependencies": {
+    "simple-icons": "^16.38.1"
   }
 }

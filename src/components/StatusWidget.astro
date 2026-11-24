@@ -1,0 +1,23 @@
+---
+// Real, defensible facts only — no "status: passing"-style claims this
+// static build can't actually verify. Values are derived from
+// terraform/oidc.tf and terraform/cloudfront.tf; keep them in sync if
+// those change.
+const builtAt = new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC';
+
+const facts = [
+  { key: 'deploy', value: 'GitHub Actions · OIDC' },
+  { key: 'keys', value: 'none (OIDC only)' },
+  { key: 'tls', value: '1.2_2021 min' },
+  { key: 'built', value: builtAt },
+];
+---
+<div class="status-widget">
+  <div class="status-widget-title">infra</div>
+  {facts.map((f) => (
+    <div class="status-widget-row">
+      <span>{f.key}</span>
+      <span>{f.value}</span>
+    </div>
+  ))}
+</div>

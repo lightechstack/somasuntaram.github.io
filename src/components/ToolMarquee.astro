@@ -1,0 +1,139 @@
+---
+// Logos from Simple Icons (CC0), inlined at build time, no runtime fetch.
+// AWS and Azure aren't in Simple Icons, so they render as wordmark badges.
+import {
+  siKubernetes, siDocker, siTerraform, siHelm, siGooglecloud, siGithubactions,
+  siJenkins, siLinux, siGnubash, siGit, siPrometheus, siGrafana, siElasticsearch,
+  siKibana, siFluentd, siNewrelic, siSumologic, siMongodb, siMysql, siRedis,
+  siMqtt, siSonarqubeserver, siModelcontextprotocol,
+} from 'simple-icons';
+
+type Tool = { name: string; icon?: { path: string; hex: string } };
+
+const rowA: Tool[] = [
+  { name: 'AWS' }, { name: 'Kubernetes', icon: siKubernetes }, { name: 'Docker', icon: siDocker },
+  { name: 'Terraform', icon: siTerraform }, { name: 'Helm', icon: siHelm },
+  { name: 'Google Cloud', icon: siGooglecloud }, { name: 'Azure' },
+  { name: 'GitHub Actions', icon: siGithubactions }, { name: 'Jenkins', icon: siJenkins },
+  { name: 'Linux', icon: siLinux }, { name: 'Bash', icon: siGnubash }, { name: 'Git', icon: siGit },
+];
+const rowB: Tool[] = [
+  { name: 'Prometheus', icon: siPrometheus }, { name: 'Grafana', icon: siGrafana },
+  { name: 'Elasticsearch', icon: siElasticsearch }, { name: 'Kibana', icon: siKibana },
+  { name: 'Fluentd', icon: siFluentd }, { name: 'New Relic', icon: siNewrelic },
+  { name: 'Sumo Logic', icon: siSumologic }, { name: 'MongoDB', icon: siMongodb },
+  { name: 'MySQL', icon: siMysql }, { name: 'Redis', icon: siRedis }, { name: 'MQTT', icon: siMqtt },
+  { name: 'SonarQube', icon: siSonarqubeserver }, { name: 'MCP', icon: siModelcontextprotocol },
+];
+
+// Very dark brand colours vanish on a dark background; fall back to text colour.
+const isDark = (hex: string) => {
+  const n = parseInt(hex, 16);
+  const [r, g, b] = [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b < 60;
+};
+const rows = [
+  { tools: rowA, dir: 'left' },
+  { tools: rowB, dir: 'right' },
+];
+---
+<div class="marquee-wrap">
+  {rows.map(({ tools, dir }) => (
+    <div class={`marquee ${dir}`}>
+      {[0, 1].map((copy) => (
+        <ul class="track" aria-hidden={copy === 1 ? 'true' : undefined}>
+          {tools.map((t) => (
+            <li
+              class="tool"
+              style={t.icon
+                ? `--brand:#${t.icon.hex};--brand-dark:${isDark(t.icon.hex) ? 'var(--ink)' : '#' + t.icon.hex}`
+                : `--brand:${t.name === 'AWS' ? '#FF9900' : '#0078D4'};--brand-dark:${t.name === 'AWS' ? '#FF9900' : '#3b9cff'}`}
+            >
+              {t.icon ? (
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d={t.icon.path} /></svg>
+              ) : (
+                <span class="wordmark" aria-hidden="true">{t.name === 'AWS' ? 'aws' : 'Az'}</span>
+              )}
+              <span class="tool-name">{t.name}</span>
+            </li>
+          ))}
+        </ul>
+      ))}
+    </div>
+  ))}
+</div>
+
+<style>
+  .marquee-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  }
+  .marquee { display: flex; overflow: hidden; }
+  .track {
+    display: flex;
+    gap: 0.9rem;
+    padding: 0 0.45rem;
+    margin: 0;
+    list-style: none;
+    flex-shrink: 0;
+    min-width: max-content;
+    animation: scroll 45s linear infinite;
+  }
+  .right .track { animation-direction: reverse; animation-duration: 50s; }
+  .marquee:hover .track { animation-play-state: paused; }
+  @keyframes scroll { to { transform: translateX(-100%); } }
+
+  .tool {
+    --brand: var(--ink);
+    --brand-dark: var(--ink);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin: 0;
+    padding: 0.65rem 1.1rem;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--surface);
+    color: var(--ink-muted);
+    font-size: 0.9rem;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+  }
+  .tool svg { width: 22px; height: 22px; fill: currentColor; transition: fill 0.2s ease; }
+  .tool:hover { color: var(--ink); border-color: color-mix(in srgb, var(--brand) 45%, var(--line)); transform: translateY(-2px); }
+  .tool:hover svg { fill: var(--brand); }
+  @media (prefers-color-scheme: dark) {
+    .tool:hover svg { fill: var(--brand-dark); }
+  }
+  .wordmark {
+    display: grid;
+    place-items: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 3px;
+    border-radius: 5px;
+    background: currentColor;
+    color: var(--ink-muted);
+    -webkit-text-fill-color: var(--surface);
+    transition: color 0.2s ease;
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .tool:hover .wordmark { color: var(--brand); }
+  @media (prefers-color-scheme: dark) {
+    .tool:hover .wordmark { color: var(--brand-dark); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .track { animation: none; flex-wrap: wrap; justify-content: center; min-width: 0; }
+    .track[aria-hidden='true'] { display: none; }
+    .marquee { overflow: visible; }
+    .marquee-wrap { mask-image: none; -webkit-mask-image: none; }
+  }
+</style>

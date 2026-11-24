@@ -1,15 +1,87 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import Panel from '../../components/Panel.astro';
 ---
 <BaseLayout title="DevSecOps pipeline design — Somasuntaram">
-  <h1>DevSecOps pipeline design</h1>
-  <div class="blocked">
-    BLOCKED — needs before writing:
-    <ul>
-      <li>Drop "GitOps" from the framing. You're running CodeBuild-based CI/CD, not a reconciliation-loop operator (ArgoCD/Flux). Calling push-based CodeBuild deploys "GitOps" is the single fastest way to lose credibility with an interviewer who knows the term — they will ask "what's your reconciliation loop / drift detection" and there isn't one.</li>
-      <li>Actual pipeline stages: what runs in CodeBuild (SAST, dependency scan, image scan, IaC scan — which tools, at which stage, blocking vs. advisory).</li>
-      <li>What "security" actually means in this pipeline — secrets scanning, container scanning, or policy-as-code — pick the ones you actually configured, not the category.</li>
-    </ul>
-  </div>
-  <p><em>Draft will go here once the above is resolved.</em></p>
+  <Panel title="Overview">
+    <h1>DevSecOps pipeline design</h1>
+    <p>
+      Standardized CI/CD across roughly 30 services, a mix of backend APIs,
+      frontends, and cron workers, for a regulated, multi-service platform.
+      Per-service ad hoc build/deploy scripts were replaced with one Jenkins
+      pipeline template that chains SAST, secrets scanning, dependency
+      scanning, and container scanning before every deploy. The first version
+      is security-<em>instrumented</em> rather than security-gated, and this
+      page says which parts are which.
+    </p>
+  </Panel>
+
+  <Panel title="Pipeline stages">
+    <ol class="stage-list">
+      <li><strong>Checkout</strong>: shallow clone of the target branch.</li>
+      <li><strong>SAST scan</strong>: SonarQube, with results published centrally.</li>
+      <li><strong>Secrets scan</strong>: Gitleaks, with the report kept as a build artifact.</li>
+      <li><strong>Dependency scan</strong>: OWASP Dependency-Check, rolled out progressively across the service templates.</li>
+      <li><strong>Config injection</strong>: environment config is pulled in just before the build and removed from the workspace right after, so it never ends up in an image layer or in source control.</li>
+      <li><strong>Image build + scan</strong>: Docker build, then Trivy against the freshly built image.</li>
+      <li><strong>Registry push + deploy</strong>: push to the container registry, then roll the new image out to the target environment.</li>
+      <li><strong>Notify + cleanup</strong>: chat notification and workspace cleanup, with scan reports retained.</li>
+    </ol>
+  </Panel>
+
+  <Panel title="Instrumented first, gated next" id="the-finding">
+    <p>
+      Every build now produces a SAST result, a secrets-scan report, and an
+      image-scan report. That's real signal, and it makes findings visible on
+      every change instead of only in occasional audits. In this first
+      version, though, a finding is reported rather than blocking the build.
+    </p>
+    <p>
+      So I call it security-instrumented, not security-gated. "Security-gated
+      CI/CD" is a claim that doesn't survive someone asking "so what happens
+      when Trivy finds a critical CVE?", and I'd rather draw that line myself
+      than have it drawn for me.
+    </p>
+  </Panel>
+
+  <Panel title="The gating design">
+    <p>Turning the signal into enforcement is a short, concrete list:</p>
+    <div class="callout-good">
+      <h3>What makes it a gate</h3>
+      <ul>
+        <li><strong>SonarQube:</strong> a quality-gate wait step that fails the build on a breach.</li>
+        <li><strong>Gitleaks:</strong> a detected secret fails the pipeline. No soft-fail path.</li>
+        <li><strong>Trivy:</strong> a severity threshold with <code>--exit-code 1</code>, so a critical CVE blocks the push to the registry.</li>
+        <li><strong>Dependency-Check:</strong> a CVSS threshold that fails the build above it.</li>
+        <li><strong>Rollback by design:</strong> immutable version tags, the last N images retained, and a health check before the previous release is retired.</li>
+      </ul>
+    </div>
+    <p>
+      None of this is exotic. The point of a template is that each of these
+      changes lands once and applies to every service at the same time.
+    </p>
+  </Panel>
+
+  <Panel title="Scale and rollout">
+    <p>
+      31 distinct service templates (backend APIs, frontends, cron workers),
+      each replicated per environment across development, staging, and UAT.
+      "Roughly 30 services" is the real order of magnitude, not a
+      rounded-up number. Rollout started with a single-service pilot and a
+      small batch of follow-ups, then the bulk of the standardization landed
+      in two large waves a few days apart. One service variant skips the
+      deploy stages and runs scan-only. That shows the template really is a
+      template: it flexes to a different use case without a rewrite.
+    </p>
+  </Panel>
 </BaseLayout>
+
+<style>
+  .stage-list {
+    padding-left: 1.4rem;
+    margin: 0.75rem 0 1rem;
+  }
+  .stage-list li {
+    margin-bottom: 0.5rem;
+  }
+</style>

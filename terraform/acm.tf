@@ -11,24 +11,14 @@ resource "aws_acm_certificate" "site" {
   }
 }
 
-resource "aws_route53_record" "cert_validation" {
-  for_each = {
-    for dvo in aws_acm_certificate.site.domain_validation_options : dvo.domain_name => {
-      name   = dvo.resource_record_name
-      record = dvo.resource_record_value
-      type   = dvo.resource_record_type
-    }
-  }
-
-  zone_id = local.zone_id
-  name    = each.value.name
-  type    = each.value.type
-  records = [each.value.record]
-  ttl     = 60
-}
-
+# DNS lives in Cloudflare, not Route53 — Terraform can't create these
+# records itself. Add them manually (see the cert_validation_records
+# output), then re-run apply; this resource just polls ACM until it sees
+# them and finishes on its own.
 resource "aws_acm_certificate_validation" "site" {
-  provider                = aws.us_east_1
-  certificate_arn          = aws_acm_certificate.site.arn
-  validation_record_fqdns = [for r in aws_route53_record.cert_validation : r.fqdn]
+  provider        = aws.us_east_1
+  certificate_arn = aws_acm_certificate.site.arn
+  validation_record_fqdns = [
+    for dvo in aws_acm_certificate.site.domain_validation_options : dvo.resource_record_name
+  ]
 }

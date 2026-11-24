@@ -1,29 +1,131 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-
-const caseStudies = [
-  { slug: 'heroku-vercel-to-eks', title: 'Heroku/Vercel → EKS migration', status: 'blocked' },
-  { slug: 'devsecops-pipeline', title: 'DevSecOps pipeline design', status: 'blocked' },
-  { slug: 'compliance-as-infrastructure', title: 'Compliance as infrastructure', status: 'blocked' },
-  { slug: 'production-incident', title: 'Production incident writeup', status: 'blocked' },
-  { slug: 'portfolio-infra', title: 'This site\u2019s own infrastructure', status: 'ready' },
-];
+import PipelineHero from '../components/PipelineHero.astro';
+import ToolMarquee from '../components/ToolMarquee.astro';
+import CaseStudyList from '../components/CaseStudyList.astro';
+import { profile, stats, now, principles, journey } from '../data/profile';
 ---
-<BaseLayout title="Somasuntaram — Platform / DevSecOps Engineer">
-  <h1>Somasuntaram</h1>
-  <p>
-    Lead DevSecOps Engineer. AWS infrastructure, Kubernetes/EKS operations,
-    CI/CD, and compliance-adjacent platform work — described here at the
-    level of detail I can actually defend, not the level that sounds best.
-  </p>
-
-  <h2>Case studies</h2>
-  {caseStudies.map((cs) => (
-    <div class="case-study-card">
-      <h3><a href={`/work/${cs.slug}`}>{cs.title}</a></h3>
-      {cs.status === 'blocked' && (
-        <p class="blocked">status: blocked — content pending resume fact-check</p>
-      )}
+<BaseLayout title="Somasuntaram — DevOps & Platform Engineer" wide>
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-copy reveal">
+      <p class="hero-eyebrow">{profile.title} · {profile.location}</p>
+      <h1>I build the platforms <span class="grad">other engineers ship on.</span></h1>
+      <p class="hero-intro">
+        {profile.years} years running cloud infrastructure in fintech and SaaS, usually
+        as the first or only DevOps engineer. Migrations, DevSecOps pipelines,
+        compliance controls, and lately AI-assisted operations.
+      </p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#work">See the work</a>
+        <a class="btn btn-secondary" href="/resume">Resume</a>
+      </div>
     </div>
-  ))}
+    <div class="hero-visual reveal" style="--d:120ms">
+      <PipelineHero />
+    </div>
+  </section>
+
+  <!-- Impact -->
+  <section class="section" id="impact">
+    <div class="section-head reveal">
+      <p class="kicker">Impact</p>
+      <h2>Numbers I can walk you through</h2>
+    </div>
+    <div class="stats">
+      {stats.map((s, i) => (
+        <div class="stat reveal" style={`--d:${i * 60}ms`}>
+          <div class="stat-value">
+            {s.prefix}<span data-count={s.value}>{s.value}</span>{s.suffix}
+          </div>
+          <p>{s.label}</p>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <!-- Stack -->
+  <section class="section" id="stack">
+    <div class="section-head reveal">
+      <p class="kicker">Stack</p>
+      <h2>Tools I run in production</h2>
+    </div>
+    <div class="reveal"><ToolMarquee /></div>
+  </section>
+
+  <!-- Now -->
+  <section class="section" id="now">
+    <div class="section-head reveal">
+      <p class="kicker">Now</p>
+      <h2>What I'm working on</h2>
+    </div>
+    <div class="now-grid">
+      {now.map((n, i) => (
+        <article class="now-card reveal" style={`--d:${i * 80}ms`}>
+          <span class="now-kicker">{n.kicker}</span>
+          <h3>{n.title}</h3>
+          <p>{n.body}</p>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <!-- Work -->
+  <section class="section" id="work">
+    <div class="section-head reveal">
+      <p class="kicker">Selected work</p>
+      <h2>Case studies, written to be questioned</h2>
+    </div>
+    <div class="reveal"><CaseStudyList /></div>
+  </section>
+
+  <!-- Principles -->
+  <section class="section" id="principles">
+    <div class="section-head reveal">
+      <p class="kicker">How I work</p>
+      <h2>Four rules I don't bend</h2>
+    </div>
+    <div class="principles">
+      {principles.map((p, i) => (
+        <div class="principle reveal" style={`--d:${i * 70}ms`}>
+          <span class="principle-n">0{i + 1}</span>
+          <h3>{p.title}</h3>
+          <p>{p.body}</p>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <!-- Journey -->
+  <section class="section" id="journey">
+    <div class="section-head reveal">
+      <p class="kicker">Journey</p>
+      <h2>From instrumentation to infrastructure</h2>
+    </div>
+    <ol class="timeline">
+      {journey.map((j) => (
+        <li class="tl-item reveal">
+          <span class="tl-year">{j.year}</span>
+          <div class="tl-body">
+            <h3>{j.title}</h3>
+            <p class="tl-where">{j.where}</p>
+            {j.points.length > 0 && (
+              <ul>{j.points.map((p) => <li>{p}</li>)}</ul>
+            )}
+          </div>
+        </li>
+      ))}
+    </ol>
+  </section>
+
+  <!-- Contact -->
+  <section class="contact reveal" id="contact">
+    <p class="kicker">Contact</p>
+    <h2>Need infrastructure you don't have to worry about?</h2>
+    <p>Want to go deeper on any of this? I'm happy to walk through a case study, a number, or a design decision.</p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href={`mailto:${profile.email}`}>Email me</a>
+      <a class="btn btn-secondary" href={profile.linkedin} rel="noopener">LinkedIn ↗</a>
+    </div>
+  </section>
 </BaseLayout>

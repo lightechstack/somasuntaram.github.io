@@ -1,12 +1,32 @@
 ---
 import '../styles/global.css';
+import StatusWidget from '../components/StatusWidget.astro';
+import { profile } from '../data/profile';
 
 interface Props {
   title: string;
   description?: string;
+  /** Homepage uses a wider canvas than the reading-width case studies. */
+  wide?: boolean;
 }
 
-const { title, description = 'DevSecOps / Platform engineering portfolio.' } = Astro.props;
+const {
+  title,
+  description = 'Somasuntaram, DevOps & Platform Engineer: cloud infrastructure, DevSecOps pipelines and compliance controls.',
+  wide = false,
+} = Astro.props;
+
+const navItems = [
+  { href: '/work', label: 'Work' },
+  { href: '/#stack', label: 'Stack', anchor: true },
+  { href: '/#journey', label: 'Journey', anchor: true },
+  { href: '/resume', label: 'Resume' },
+];
+
+const currentPath = Astro.url.pathname.replace(/\/$/, '') || '/';
+const isActive = (href: string) => (href === '/work' && currentPath.startsWith('/work')) || href === currentPath;
+const year = new Date().getFullYear();
+const isCaseStudy = currentPath.startsWith('/work/');
 ---
 
 <!doctype html>
@@ -14,26 +34,89 @@ const { title, description = 'DevSecOps / Platform engineering portfolio.' } = A
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light dark" />
   <title>{title}</title>
   <meta name="description" content={description} />
+  <link
+    rel="icon"
+    type="image/svg+xml"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2309090b'/%3E%3Ctext x='16' y='22' font-family='system-ui,sans-serif' font-size='18' font-weight='700' fill='%23ffffff' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E"
+  />
+  <script is:inline>document.documentElement.classList.add('js');</script>
 </head>
 <body>
-  <div class="status-line">
-    <span class="status-dot" aria-hidden="true"></span>
-    <span>Somasuntaram — Platform / DevSecOps</span>
-    <span>·</span>
-    <a href="/">index</a>
-    <span>·</span>
-    <a href="/work">work</a>
-    <span>·</span>
-    <a href="/resume.pdf">resume.pdf</a>
-  </div>
-  <main>
+  <header class="site-header">
+    <div class="site-header-inner">
+      <a href="/" class="brand" aria-label="Somasuntaram, home">
+        <span class="brand-mark">S</span>
+        <span class="brand-name">Somasuntaram</span>
+      </a>
+      <nav class="site-nav" aria-label="Main">
+        {navItems.map((item) => (
+          <a href={item.href} class:list={{ 'nav-anchor': item.anchor }} aria-current={isActive(item.href) ? 'page' : undefined}>
+            {item.label}
+          </a>
+        ))}
+        <a class="nav-cta" href="/#contact">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class:list={['site-main', { 'site-main-wide': wide }]}>
+    {isCaseStudy && <a class="back-link" href="/work">← All work</a>}
     <slot />
   </main>
-  <footer style="margin: 4rem 0 2rem; font-family: var(--mono); font-size: 0.8rem; color: var(--ink-muted);">
-    Built on AWS (S3 + CloudFront + Route53 + ACM), provisioned with Terraform, deployed via GitHub Actions —
-    <a href="/work/portfolio-infra">details</a>.
+
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <div>
+        <p class="footer-name">Somasuntaram</p>
+        <p class="footer-note">{profile.title} · {profile.location}</p>
+        <p class="footer-links">
+          <a href={`mailto:${profile.email}`}>Email</a>
+          <a href={profile.linkedin} rel="noopener">LinkedIn</a>
+          <a href="/resume">Resume</a>
+        </p>
+        <p class="footer-note">
+          Built with Astro on AWS (S3 · CloudFront · Terraform · GitHub Actions OIDC).
+          <a href="/work/portfolio-infra">How it's run →</a>
+        </p>
+        <p class="footer-note">© {year} Somasuntaram</p>
+      </div>
+      <StatusWidget />
+    </div>
   </footer>
+
+  <script>
+    // Scroll reveal + count-up. Content is fully visible without JS
+    // (hidden state only applies under html.js) and with reduced motion.
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const countUp = (el: HTMLElement) => {
+      const target = Number(el.dataset.count);
+      if (reduce || !target) return;
+      const start = performance.now();
+      const dur = 1200;
+      const frame = (t: number) => {
+        const p = Math.min(1, (t - start) / dur);
+        el.textContent = String(Math.round(target * (1 - Math.pow(1 - p, 3))));
+        if (p < 1) requestAnimationFrame(frame);
+      };
+      el.textContent = '0';
+      requestAnimationFrame(frame);
+    };
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (!e.isIntersecting) return;
+          const el = e.target as HTMLElement;
+          el.classList.add('in');
+          el.querySelectorAll<HTMLElement>('[data-count]').forEach(countUp);
+          io.unobserve(el);
+        });
+      },
+      { threshold: 0.15, rootMargin: '0px 0px -40px 0px' }
+    );
+    document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
+  </script>
 </body>
 </html>

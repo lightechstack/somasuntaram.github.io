@@ -1,0 +1,144 @@
+---
+// Animated DevSecOps pipeline, the stages I actually run before a release
+// (see resume + devsecops-pipeline case study). Illustrative, not live data.
+const stages = [
+  { name: 'git push', detail: 'main' },
+  { name: 'Gitleaks', detail: 'secret scan' },
+  { name: 'SonarQube', detail: 'static analysis' },
+  { name: 'Dependency scan', detail: 'known CVEs' },
+  { name: 'Image scan', detail: 'container layers' },
+  { name: 'terraform plan', detail: 'infra diff' },
+  { name: 'Deploy', detail: 'rolling' },
+];
+---
+<div class="pipe" data-pipeline aria-label="Illustration of a DevSecOps release pipeline" role="img">
+  <div class="pipe-bar">
+    <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+    <span class="pipe-title">pipeline · main</span>
+    <span class="pipe-live" aria-hidden="true"><span class="pulse"></span>demo</span>
+  </div>
+  <ol class="pipe-stages">
+    {stages.map((s, i) => (
+      <li class="stage done" style={`--i:${i}`}>
+        <span class="status" aria-hidden="true"></span>
+        <span class="stage-name">{s.name}</span>
+        <span class="stage-detail">{s.detail}</span>
+      </li>
+    ))}
+  </ol>
+  <div class="pipe-foot">
+    <span>illustrative</span>
+    <span>stages from my release pipelines</span>
+  </div>
+</div>
+
+<script>
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  document.querySelectorAll<HTMLElement>('[data-pipeline]').forEach((el) => {
+    if (reduce) return;
+    const rows = Array.from(el.querySelectorAll<HTMLElement>('.stage'));
+    const live = el.querySelector<HTMLElement>('.pipe-live');
+    let step = 0;
+    const total = rows.length + 3; // pause on "all green" before restarting
+    const tick = () => {
+      rows.forEach((r, i) => {
+        r.classList.toggle('done', i < step);
+        r.classList.toggle('running', i === step);
+      });
+      live?.classList.toggle('idle', step >= rows.length);
+      step = (step + 1) % total;
+    };
+    tick();
+    setInterval(tick, 850);
+  });
+</script>
+
+<style>
+  .pipe {
+    position: relative;
+    background: #0b0b0f;
+    color: #e4e4e7;
+    border: 1px solid #27272a;
+    border-radius: 16px;
+    box-shadow: 0 30px 60px -20px rgba(37, 99, 235, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    overflow: hidden;
+  }
+  .pipe-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #1f1f23;
+    background: #111114;
+  }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: #3f3f46; }
+  .pipe-title { margin-left: 0.6rem; color: #a1a1aa; }
+  .pipe-live {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: #93c5fd;
+    font-size: 0.75rem;
+  }
+  .pipe-live.idle { color: #4ade80; }
+  .pipe-live.idle .pulse { background: #4ade80; animation: none; }
+  .pulse {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #60a5fa;
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+  .pipe-stages { list-style: none; margin: 0; padding: 0.6rem 0; }
+  .stage {
+    display: grid;
+    grid-template-columns: 22px 1fr auto;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 1.1rem;
+    margin: 0;
+    color: #71717a;
+    transition: color 0.3s ease, background 0.3s ease;
+  }
+  .stage-detail { color: #52525b; font-size: 0.75rem; }
+  .status {
+    width: 16px; height: 16px; border-radius: 50%;
+    border: 1.5px solid #3f3f46;
+    position: relative;
+    transition: all 0.3s ease;
+  }
+  .stage.running { color: #fafafa; background: rgba(96, 165, 250, 0.08); }
+  .stage.running .stage-detail { color: #93c5fd; }
+  .stage.running .status {
+    border-color: #60a5fa;
+    border-top-color: transparent;
+    animation: spin 0.8s linear infinite;
+  }
+  .stage.done { color: #e4e4e7; }
+  .stage.done .stage-detail { color: #71717a; }
+  .stage.done .status { border-color: #22c55e; background: #22c55e; }
+  .stage.done .status::after {
+    content: '';
+    position: absolute;
+    left: 4.5px; top: 1.5px;
+    width: 4px; height: 8px;
+    border: solid #0b0b0f;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+  .pipe-foot {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem 1.1rem;
+    border-top: 1px solid #1f1f23;
+    color: #71717a;
+    font-size: 0.75rem;
+  }
+  .ok { color: #4ade80; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes pulse { 50% { opacity: 0.35; transform: scale(0.8); } }
+  @media (prefers-reduced-motion: reduce) {
+    .pulse, .stage.running .status { animation: none; }
+  }
+</style>

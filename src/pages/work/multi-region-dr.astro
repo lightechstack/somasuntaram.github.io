@@ -1,0 +1,147 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Panel from '../../components/Panel.astro';
+---
+<BaseLayout title="Multi-region DR rebuild — Somasuntaram">
+  <Panel title="Overview">
+    <h1>Multi-region disaster-recovery rebuild</h1>
+    <p>
+      A production Kubernetes platform ran in a single region, with no
+      tested path to survive a regional failure. I designed and built a
+      dedicated DR region, used the rebuild as the forcing function for a set of
+      overdue version upgrades, and then proved it with an actual failover
+      drill rather than calling it done once the Terraform applied cleanly.
+    </p>
+  </Panel>
+
+  <Panel title="Original design vs. DR design">
+    <table class="fact-table">
+      <thead>
+        <tr><th>Component</th><th>Original</th><th>DR design</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Availability zones</td><td>2</td><td>3</td></tr>
+        <tr><td>Public subnets</td><td>2</td><td>3</td></tr>
+        <tr><td>Private subnets</td><td>2</td><td>6 (3 in active use)</td></tr>
+        <tr><td>NAT gateways</td><td>1</td><td>3</td></tr>
+        <tr><td>Route tables</td><td>1</td><td>3</td></tr>
+      </tbody>
+    </table>
+    <p>
+      A single shared NAT gateway is a single point of failure, so the DR
+      design doesn't carry it forward. Three AZs, three NAT gateways, and
+      per-AZ route tables were deliberate: a regional failover that still
+      funnels every AZ's egress through one NAT gateway hasn't fixed the
+      availability problem, only moved it.
+    </p>
+  </Panel>
+
+  <Panel title="Bundling the rebuild with overdue upgrades">
+    <p>
+      Standing up a second region meant building the cluster fresh anyway,
+      so I used it to clear a version-upgrade backlog that would otherwise
+      have needed its own separate, riskier in-place maintenance window:
+    </p>
+    <table class="fact-table">
+      <thead>
+        <tr><th>Component</th><th>Before</th><th>After</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Kubernetes</td><td>1.23</td><td>1.31</td></tr>
+        <tr><td>Postgres (RDS)</td><td>13.13</td><td>16.3</td></tr>
+        <tr><td>API gateway</td><td>3.0</td><td>3.4 (LTS)</td></tr>
+        <tr><td>Node OS</td><td>Amazon Linux</td><td>Amazon Linux 2023</td></tr>
+        <tr><td>Jump-server OS</td><td>Ubuntu 20.04</td><td>Ubuntu 24.04</td></tr>
+        <tr><td>Node.js runtime</td><td>16 / 18 / 20 (mixed)</td><td>22</td></tr>
+      </tbody>
+    </table>
+    <p>
+      The same rebuild also modernised secrets management, which had nothing
+      to do with regions specifically: application config moved from
+      per-host <code>.env</code> files to AWS Secrets Manager pulled in via
+      the Secrets Store CSI driver, and IAM access moved from static
+      long-lived credentials to per-service-account roles via IRSA. Neither
+      change depended on having two regions — they rode along because the
+      cluster was being built from scratch either way, and retrofitting them
+      onto the still-running primary later would have been strictly harder.
+    </p>
+  </Panel>
+
+  <Panel title="Node-group isolation">
+    <p>
+      The cluster runs five separate managed node groups instead of one
+      general-purpose pool — gateway/edge, core request-serving services,
+      compute processing, transaction handling, and a batch-style crawling
+      workload — each isolated with its own taint so a pod only lands there
+      if it explicitly tolerates that workload type. All five run on the
+      same ARM-based instance family, so the isolation is entirely a
+      scheduling decision, not a hardware one. Each group also gets its own
+      autoscaling range sized to how bursty that workload is. The
+      transaction-handling group scales the widest because its load is far
+      less predictable than, say, the gateway tier's. A spike in one workload's resource usage scales
+      that node group's autoscaler, not the whole cluster, and a bad deploy
+      on the batch workload can't starve the gateway of capacity.
+    </p>
+  </Panel>
+
+  <Panel title="The drill" id="the-drill">
+    <p>
+      A DR region that's never been failed over to is a hypothesis, not a
+      plan. I ran an actual drill against a staging dataset: simulate a
+      primary-region database failure, promote the DR region, and measure
+      what actually happens instead of what the runbook says should happen.
+    </p>
+    <div class="callout-good">
+      <h3>What the drill actually showed</h3>
+      <ul>
+        <li>All three validation checks passed: DR-side availability,
+          data-sync verification, and performance monitoring under the
+          promoted database.</li>
+        <li>Time from triggering the simulated failure to full restoration
+          was measured and timestamped step by step, not estimated after the
+          fact.</li>
+        <li>Replication lag at the point of failover meant <strong>some recent
+          writes were lost</strong>. That's the honest headline finding from
+          the drill, and it set the target for the follow-up work.</li>
+        <li>The drill covered database-level failover. DNS-level traffic
+          failover is a separate exercise with its own drill.</li>
+      </ul>
+    </div>
+    <p>
+      I'd rather report the data loss than round the drill up to "DR
+      verified." The follow-up work, reducing replication lag and automating
+      replica promotion instead of running it by hand, is scoped precisely
+      because the drill showed exactly where the gap was. Stopping at "the
+      runbook completed without erroring" would have hidden it.
+    </p>
+  </Panel>
+
+  <Panel title="What I'd do differently">
+    <p>
+      Automate the failover instead of executing the runbook by hand. A
+      human-paced failover shows the architecture works, but it isn't an RTO
+      I'd commit to during a real incident. And I'd drill traffic failover
+      as rigorously as database failover: a database that fails over cleanly
+      doesn't help if traffic never reaches it.
+    </p>
+  </Panel>
+</BaseLayout>
+
+<style>
+  .fact-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.75rem 0 1rem;
+    font-size: 0.9rem;
+  }
+  .fact-table th,
+  .fact-table td {
+    text-align: left;
+    padding: 0.4rem 0.75rem 0.4rem 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .fact-table th {
+    color: var(--ink-muted);
+    font-weight: 600;
+  }
+</style>

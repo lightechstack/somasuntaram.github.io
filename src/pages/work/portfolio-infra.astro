@@ -1,76 +1,117 @@
 ---
+import { Code } from 'astro:components';
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import Panel from '../../components/Panel.astro';
+import ArchitectureDiagram from '../../components/ArchitectureDiagram.astro';
+
+const oidcTrustCondition = `condition {
+  test     = "StringEquals"
+  variable = "token.actions.githubusercontent.com:sub"
+  values   = ["repo:\${var.github_repo}:ref:refs/heads/main"]
+}`;
+
+const deployStep = `- name: Configure AWS credentials
+  uses: aws-actions/configure-aws-credentials@v4
+  with:
+    role-to-assume: \${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+    aws-region: ap-south-1`;
 ---
 <BaseLayout title="This site's own infrastructure — Somasuntaram">
-  <h1>This site's own infrastructure</h1>
+  <Panel title="Overview">
+    <h1>This site's own infrastructure</h1>
+    <p>
+      Static site, but the infra decisions weren't trivial — each one has a
+      reason, and I can defend all of them.
+    </p>
+  </Panel>
 
-  <p>
-    Static site, but the infra decisions weren't trivial — each one has a
-    reason, and I can defend all of them.
-  </p>
+  <Panel title="Architecture">
+    <ArchitectureDiagram />
+  </Panel>
 
-  <h2>Why static + CloudFront over anything server-rendered</h2>
-  <p>
-    Content is entirely author-controlled — there's no user data, no auth,
-    no dynamic query path. A server introduces attack surface and cost for
-    zero functional gain. Astro builds to static HTML; CloudFront + S3 gives
-    global edge caching without running compute I'd have to patch and
-    monitor.
-  </p>
+  <Panel title="Security posture" id="security-posture">
+    <div class="callout-good">
+      <h3>What's actually true of this stack right now</h3>
+      <ul>
+        <li>No long-lived AWS credentials anywhere — the deploy role is assumed via GitHub's OIDC provider, and the trust policy's <code>sub</code> condition scopes it to <code>refs/heads/main</code> specifically, so a PR from a fork can't assume it.</li>
+        <li>The S3 bucket has all four public-access-block settings on and a bucket policy that only allows reads from this exact CloudFront distribution's ARN via <code>AWS:SourceArn</code> — not a wildcard CloudFront service principal.</li>
+        <li>SSE-S3 encryption and versioning are on for the bucket.</li>
+        <li>CloudFront's viewer certificate enforces <code>TLSv1.2_2021</code> as the minimum protocol version.</li>
+        <li>A response-headers policy adds HSTS (with preload), <code>X-Content-Type-Options: nosniff</code>, <code>X-Frame-Options: DENY</code>, a strict <code>Referrer-Policy</code>, and a same-origin <code>Content-Security-Policy</code> — see <code>terraform/cloudfront.tf</code>.</li>
+      </ul>
+    </div>
 
-  <h2>S3 access model</h2>
-  <p>
-    The bucket blocks all public access. CloudFront reaches it through an
-    Origin Access Control (OAC) — the modern replacement for the older OAI
-    pattern — and the bucket policy is scoped to this distribution's exact
-    ARN via a <code>StringEquals</code> condition on <code>AWS:SourceArn</code>,
-    not a wildcard CloudFront service principal. That distinction matters:
-    a wildcard principal would let <em>any</em> CloudFront distribution in
-    the account read the bucket, not just this one.
-  </p>
+    <p>The trust condition that scopes the deploy role to <code>main</code> only:</p>
+    <Code code={oidcTrustCondition} lang="hcl" theme="github-dark-default" />
 
-  <h2>The state backend bootstrap problem</h2>
-  <p>
-    Terraform's S3 backend can't create its own state bucket — the storage
-    has to exist before Terraform can point at it. I bootstrap it once via
-    AWS CLI (bucket + versioning + a DynamoDB table for state locking), then
-    hand off to Terraform for everything downstream. The alternative — a
-    separate bootstrap Terraform root with local state — is more "correct"
-    for a team but is overkill for a single-stack personal site. Worth
-    saying explicitly if asked, rather than pretending everything is
-    Terraform-managed end to end.
-  </p>
+    <p>And the workflow step that assumes it — no <code>aws-access-key-id</code> secret exists in this repo:</p>
+    <Code code={deployStep} lang="yaml" theme="github-dark-default" />
+  </Panel>
 
-  <h2>ACM cross-region requirement</h2>
-  <p>
-    CloudFront only accepts ACM certificates issued in <code>us-east-1</code>,
-    regardless of which region the rest of the stack lives in. The Terraform
-    config uses a provider alias so the primary provider stays in
-    <code>ap-south-1</code> for anything region-flexible while the cert
-    resource is pinned to <code>us-east-1</code> explicitly, rather than
-    quietly running the whole stack out of Virginia.
-  </p>
+  <Panel title="Design decisions">
+    <h2>Why static + CloudFront over anything server-rendered</h2>
+    <p>
+      Content is entirely author-controlled — there's no user data, no auth,
+      no dynamic query path. A server introduces attack surface and cost for
+      zero functional gain. Astro builds to static HTML; CloudFront + S3 gives
+      global edge caching without running compute I'd have to patch and
+      monitor.
+    </p>
 
-  <h2>Deploy pipeline</h2>
-  <p>
-    GitHub Actions builds the Astro site, syncs the output to S3, then
-    issues a CloudFront invalidation for changed paths. No blue/green
-    needed — it's static assets behind a CDN, so cache invalidation is the
-    entire deployment problem. The interesting failure mode here is a stale
-    invalidation scope (invalidating <code>/*</code> on every deploy is
-    correct but costs more; targeted invalidation is cheaper but risks
-    missing a changed shared asset) — this stack takes the simpler
-    <code>/*</code> approach deliberately, given the site's low deploy
-    frequency and file count.
-  </p>
+    <h2>S3 access model</h2>
+    <p>
+      The bucket blocks all public access. CloudFront reaches it through an
+      Origin Access Control (OAC) — the modern replacement for the older OAI
+      pattern — and the bucket policy is scoped to this distribution's exact
+      ARN via a <code>StringEquals</code> condition on <code>AWS:SourceArn</code>,
+      not a wildcard CloudFront service principal. That distinction matters:
+      a wildcard principal would let <em>any</em> CloudFront distribution in
+      the account read the bucket, not just this one.
+    </p>
 
-  <h2>What I'd change at higher traffic</h2>
-  <p>
-    Nothing here is designed for scale because it doesn't need to be. If
-    this were a real product surface: WAF in front of CloudFront, a
-    separate staging distribution, and probably moving off
-    <code>PriceClass_100</code> if traffic showed meaningful non-NA/EU
-    demand. Saying "this would need X at scale" without X actually being
-    load-bearing anywhere is a smell I'm avoiding here.
-  </p>
+    <h2>The state backend bootstrap problem</h2>
+    <p>
+      Terraform's S3 backend can't create its own state bucket — the storage
+      has to exist before Terraform can point at it. I bootstrap it once via
+      AWS CLI (bucket + versioning + a DynamoDB table for state locking), then
+      hand off to Terraform for everything downstream. The alternative — a
+      separate bootstrap Terraform root with local state — is more "correct"
+      for a team but is overkill for a single-stack personal site. Worth
+      saying explicitly if asked, rather than pretending everything is
+      Terraform-managed end to end.
+    </p>
+
+    <h2>ACM cross-region requirement</h2>
+    <p>
+      CloudFront only accepts ACM certificates issued in <code>us-east-1</code>,
+      regardless of which region the rest of the stack lives in. The Terraform
+      config uses a provider alias so the primary provider stays in
+      <code>ap-south-1</code> for anything region-flexible while the cert
+      resource is pinned to <code>us-east-1</code> explicitly, rather than
+      quietly running the whole stack out of Virginia.
+    </p>
+
+    <h2>Deploy pipeline</h2>
+    <p>
+      GitHub Actions builds the Astro site, syncs the output to S3, then
+      issues a CloudFront invalidation for changed paths. No blue/green
+      needed — it's static assets behind a CDN, so cache invalidation is the
+      entire deployment problem. The interesting failure mode here is a stale
+      invalidation scope (invalidating <code>/*</code> on every deploy is
+      correct but costs more; targeted invalidation is cheaper but risks
+      missing a changed shared asset) — this stack takes the simpler
+      <code>/*</code> approach deliberately, given the site's low deploy
+      frequency and file count.
+    </p>
+
+    <h2>What I'd change at higher traffic</h2>
+    <p>
+      Nothing here is designed for scale because it doesn't need to be. If
+      this were a real product surface: WAF in front of CloudFront, a
+      separate staging distribution, and probably moving off
+      <code>PriceClass_100</code> if traffic showed meaningful non-NA/EU
+      demand. Saying "this would need X at scale" without X actually being
+      load-bearing anywhere is a smell I'm avoiding here.
+    </p>
+  </Panel>
 </BaseLayout>
