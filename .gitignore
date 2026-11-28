@@ -8,3 +8,20 @@ dist/
 .terraform.lock.hcl
 terraform.tfvars
 src/drafts/
+
+# Standard ignores: secrets, Terraform, build output, editor files
+.env.*
+*.pem
+*.key
+id_rsa*
+credentials*
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+crash.log
+build/
+.venv/
+__pycache__/
+.DS_Store
+.idea/
+.vscode/
