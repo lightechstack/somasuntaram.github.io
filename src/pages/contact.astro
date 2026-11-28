@@ -4,29 +4,31 @@ import Panel from '../components/Panel.astro';
 import { profile, FORMSPREE_ENDPOINT } from '../data/profile';
 ---
 <BaseLayout title="Contact — Somasuntaram" description="Send Somasuntaram a message.">
-  <Panel title="Contact">
+  <Panel title="Overview">
     <h1>Contact</h1>
     <p>
-      Send a message with this form, or reach me on
+      Send me a message, or find me on
       <a href={profile.linkedin} rel="noopener">LinkedIn</a>.
     </p>
 
     <form id="contact-form" class="contact-form" action={FORMSPREE_ENDPOINT} method="POST">
-      <label for="cf-name">Name</label>
-      <input id="cf-name" name="name" type="text" autocomplete="name" maxlength="200" required />
+      <label class="sr-only" for="cf-name">Name</label>
+      <input id="cf-name" name="name" type="text" autocomplete="name" minlength="2" maxlength="200" pattern=".*\S.*\S.*" placeholder="Your name" aria-describedby="cf-name-error" required />
+      <span id="cf-name-error" class="cf-error" hidden></span>
 
-      <label for="cf-email">Email</label>
-      <input id="cf-email" name="email" type="email" autocomplete="email" maxlength="320" required />
+      <label class="sr-only" for="cf-email">Email</label>
+      <input id="cf-email" name="email" type="email" autocomplete="email" maxlength="320" pattern="\s*[^@\s]+@[^@\s]+\.[A-Za-z]{2,}\s*" placeholder="Your email" aria-describedby="cf-email-error" required />
+      <span id="cf-email-error" class="cf-error" hidden></span>
 
-      <label for="cf-message">Message</label>
-      <textarea id="cf-message" name="message" rows="6" maxlength="5000" required></textarea>
+      <label class="sr-only" for="cf-message">Message</label>
+      <textarea id="cf-message" name="message" rows="4" maxlength="5000" placeholder="Message" required></textarea>
 
       <div class="cf-hp" aria-hidden="true">
         <label for="cf-gotcha">Leave this field empty</label>
         <input id="cf-gotcha" name="_gotcha" type="text" tabindex="-1" autocomplete="off" />
       </div>
 
-      <button class="btn btn-primary" type="submit">Send message</button>
+      <button class="btn btn-primary" type="submit">Send</button>
     </form>
 
     <p id="contact-status" class="cf-status" role="status" aria-live="polite" hidden></p>

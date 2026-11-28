@@ -12,13 +12,19 @@ import { profile, stats, now, principles, journey } from '../data/profile';
       <p class="hero-eyebrow">{profile.title} · {profile.location}</p>
       <h1>I build the platforms <span class="grad">other engineers ship on.</span></h1>
       <p class="hero-intro">
-        {profile.years} years running cloud infrastructure in fintech and SaaS, usually
+        {profile.years}+ years running cloud infrastructure in fintech and SaaS, usually
         as the first or only DevOps engineer. Migrations, DevSecOps pipelines,
         compliance controls, and lately AI-assisted operations.
       </p>
       <div class="hero-actions">
         <a class="btn btn-primary" href="#work">See the work</a>
+        <a class="btn btn-secondary" href="#contact">Get in touch</a>
       </div>
+      <p class="hero-links">
+        <a href={profile.linkedin} rel="noopener">LinkedIn</a>
+        <span aria-hidden="true">·</span>
+        <a href={profile.github} rel="noopener">GitHub</a>
+      </p>
     </div>
     <div class="hero-visual reveal" style="--d:120ms">
       <PipelineHero />
@@ -126,5 +132,6 @@ import { profile, stats, now, principles, journey } from '../data/profile';
       <a class="btn btn-primary" href="/contact">Send a message</a>
       <a class="btn btn-secondary" href={profile.linkedin} rel="noopener">LinkedIn ↗</a>
     </div>
+    <p class="open-to"><span class="open-dot" aria-hidden="true"></span>{profile.openTo}</p>
   </section>
 </BaseLayout>

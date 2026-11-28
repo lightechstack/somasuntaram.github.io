@@ -2,24 +2,24 @@
 // the resume — if the resume changes, change this file with it.
 // No company names (see anonymization rule) — describe by domain instead.
 
-// Formspree form endpoint used by /contact. Replace YOUR_FORM_ID with the
-// ID of the form created at formspree.io (format: https://formspree.io/f/<id>).
-export const FORMSPREE_ENDPOINT = 'https://formspree.io/f/YOUR_FORM_ID';
+// Formspree form endpoint used by /contact. The ID is public by design.
+export const FORMSPREE_ENDPOINT = 'https://formspree.io/f/mbgoekww';
 
 export const profile = {
   name: 'Somasuntaram',
   title: 'DevOps & Platform Engineer',
-  location: 'Chennai, India',
+  location: 'India',
   years: 5,
   linkedin: 'https://www.linkedin.com/in/somasuntaram',
-};
+  github: 'https://github.com/lightechstack',
+  openTo: 'Open to DevOps, Platform and SRE roles · Remote or on-site',};
 
 export const stats = [
-  { value: 5, prefix: '', suffix: ' yrs', label: 'running production cloud infrastructure end to end, often as the first or only DevOps engineer' },
+  { value: 5, prefix: '', suffix: '+ yrs', label: 'running production infrastructure, often as the first or only DevOps engineer' },
   { value: 8, prefix: '', suffix: '×', label: 'fewer load-balancer errors after connection tuning and safer rollouts' },
-  { value: 75, prefix: '~', suffix: '%', label: 'lower network egress cost by moving data traffic onto private networking' },
+  { value: 75, prefix: '~', suffix: '%', label: 'FinOps: lower spend on a cost line via topology redesign, no trade-offs' },
   { value: 23, prefix: '−', suffix: '%', label: 'p90 latency, with latency and error alerting in place to keep it there' },
-  { value: 3, prefix: '', suffix: '', label: 'compliance frameworks I’ve built controls for: SOC 2, PCI DSS 4.0 and ISO 27001' },
+  { value: 5, prefix: '', suffix: '', label: 'regimes I’ve built controls for: SOC 2, PCI DSS, ISO 27001, DPDP, RBI' },
   { value: 0, prefix: '', suffix: '', label: 'long-lived cloud keys in this site’s own deploy pipeline. OIDC only.' },
 ];
 
@@ -68,7 +68,7 @@ export const journey = [
     points: [
       'Leading a high-traffic platform migration from Heroku to AWS containers',
       'Event-driven autoscaling, private networking and safer rollouts',
-      'Infrastructure as code across AWS and GCP; SOC 2 and GDPR readiness',
+      'Infrastructure as code across AWS and GCP; SOC 2, DPDP and partial GDPR readiness',
     ],
   },
   {

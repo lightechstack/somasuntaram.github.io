@@ -39,7 +39,7 @@ const isCaseStudy = currentPath.startsWith('/work/');
   <link
     rel="icon"
     type="image/svg+xml"
-    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2309090b'/%3E%3Ctext x='16' y='22' font-family='system-ui,sans-serif' font-size='18' font-weight='700' fill='%23ffffff' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2309090b'/%3E%3Cpath d='M9 16.5l4.5 4.5L23 11' fill='none' stroke='%2322c55e' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"
   />
   <script is:inline>document.documentElement.classList.add('js');</script>
 </head>
@@ -47,7 +47,7 @@ const isCaseStudy = currentPath.startsWith('/work/');
   <header class="site-header">
     <div class="site-header-inner">
       <a href="/" class="brand" aria-label="Somasuntaram, home">
-        <span class="brand-mark">S</span>
+        <img class="brand-mark" src="/me.webp" alt="" width="32" height="32" />
         <span class="brand-name">Somasuntaram</span>
       </a>
       <nav class="site-nav" aria-label="Main">
@@ -56,7 +56,7 @@ const isCaseStudy = currentPath.startsWith('/work/');
             {item.label}
           </a>
         ))}
-        <a class="nav-cta" href="/contact">Contact</a>
+        <a class="nav-cta" href="/#contact">Contact</a>
       </nav>
     </div>
   </header>
@@ -72,7 +72,7 @@ const isCaseStudy = currentPath.startsWith('/work/');
         <p class="footer-name">Somasuntaram</p>
         <p class="footer-note">{profile.title} · {profile.location}</p>
         <p class="footer-links">
-          <a href="/contact">Contact</a>
+          <a href="/#contact">Contact</a>
           <a href={profile.linkedin} rel="noopener">LinkedIn</a>
         </p>
         <p class="footer-note">
