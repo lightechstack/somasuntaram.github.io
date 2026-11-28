@@ -1,8 +1,6 @@
 name: Deploy portfolio
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch: {}
 
 permissions:
@@ -23,9 +21,7 @@ jobs:
       - run: npm ci
       - run: npm run build
 
-      # OIDC federation, not long-lived AWS access keys stored as repo
-      # secrets. Requires the IAM role + trust policy to be created once
-      # (see terraform/oidc.tf — TODO, not yet in this scaffold).
+      # OIDC federation, not long-lived AWS access keys stored as repo secrets.
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:

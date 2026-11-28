@@ -13,12 +13,11 @@ terraform/          Infra: S3, CloudFront + OAC, ACM, Route53, GitHub OIDC role
 
 ## Status
 
-Infra scaffold: complete, not yet deployed.
-Case study content: 1 of 5 written (`portfolio-infra`). The other 4 are
-explicitly blocked in-page pending resume fact-checks — see each page's
-`.blocked` box for the exact open item. Do not fill those with placeholder
-copy; the point of stubbing them is to force the fact-check before the
-prose gets written.
+Work in progress. The infrastructure code is written but not yet deployed.
+One of the five case studies is written (`portfolio-infra`); the other four
+are in progress.
+
+Deployment runs only when triggered manually (`workflow_dispatch`).
 
 ## First-time setup
 
