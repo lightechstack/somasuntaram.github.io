@@ -6,7 +6,7 @@ deployed via GitHub Actions using OIDC (no long-lived AWS keys in the repo).
 ## Structure
 
 ```
-src/pages/          Astro pages (index, /work, 5 case studies)
+src/pages/          Astro pages (index, resume, /work, 4 case studies)
 terraform/          Infra: S3, CloudFront + OAC, ACM, Route53, GitHub OIDC role
 .github/workflows/  Build + deploy pipeline
 ```
@@ -14,8 +14,7 @@ terraform/          Infra: S3, CloudFront + OAC, ACM, Route53, GitHub OIDC role
 ## Status
 
 Work in progress. The infrastructure code is written but not yet deployed.
-One of the five case studies is written (`portfolio-infra`); the other four
-are in progress.
+Four case studies are in `src/pages/work/`.
 
 Deployment runs only when triggered manually (`workflow_dispatch`).
 
