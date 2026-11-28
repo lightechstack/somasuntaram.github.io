@@ -6,7 +6,8 @@ deployed via GitHub Actions using OIDC (no long-lived AWS keys in the repo).
 ## Structure
 
 ```
-src/pages/          Astro pages (index, resume, /work, 4 case studies)
+src/pages/          Astro pages (index, contact, /work, 4 case studies)
+public/contact.js   Contact form submit and thank-you message
 terraform/          Infra: S3, CloudFront + OAC, ACM, Route53, GitHub OIDC role
 .github/workflows/  Build + deploy pipeline
 ```
@@ -15,6 +16,10 @@ terraform/          Infra: S3, CloudFront + OAC, ACM, Route53, GitHub OIDC role
 
 Work in progress. The infrastructure code is written but not yet deployed.
 Four case studies are in `src/pages/work/`.
+
+The contact form posts to Formspree. Not done: `FORMSPREE_ENDPOINT` in
+`src/data/profile.ts` still holds the placeholder ID, so the form does not
+deliver messages yet.
 
 Deployment runs only when triggered manually (`workflow_dispatch`).
 
@@ -29,7 +34,8 @@ Deployment runs only when triggered manually (`workflow_dispatch`).
    `github_deploy_role_arn` output), `SITE_BUCKET_NAME`,
    `CLOUDFRONT_DISTRIBUTION_ID`.
 5. Update `site` in `astro.config.mjs` to the real domain.
-6. Add `public/resume.pdf`.
+6. Create a form at formspree.io and set `FORMSPREE_ENDPOINT` in
+   `src/data/profile.ts` to its endpoint (`https://formspree.io/f/<id>`).
 
 ## Local dev
 

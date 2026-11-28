@@ -1,13 +1,16 @@
 // Single source of truth for homepage facts. Every number here comes from
-// public/resume — if the resume changes, change this file with it.
+// the resume — if the resume changes, change this file with it.
 // No company names (see anonymization rule) — describe by domain instead.
+
+// Formspree form endpoint used by /contact. Replace YOUR_FORM_ID with the
+// ID of the form created at formspree.io (format: https://formspree.io/f/<id>).
+export const FORMSPREE_ENDPOINT = 'https://formspree.io/f/YOUR_FORM_ID';
 
 export const profile = {
   name: 'Somasuntaram',
   title: 'DevOps & Platform Engineer',
   location: 'Chennai, India',
   years: 5,
-  email: '',
   linkedin: 'https://www.linkedin.com/in/somasuntaram',
 };
 

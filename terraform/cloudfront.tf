@@ -34,7 +34,7 @@ resource "aws_cloudfront_response_headers_policy" "security" {
     # (the one inline <style> attribute in BaseLayout.astro was moved to a
     # CSS class specifically so this can stay strict).
     content_security_policy {
-      content_security_policy = "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; base-uri 'none'; frame-ancestors 'none'; object-src 'none'"
+      content_security_policy = "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; connect-src 'self' https://formspree.io; form-action 'self' https://formspree.io; base-uri 'none'; frame-ancestors 'none'; object-src 'none'"
       override                = true
     }
   }
